@@ -1,13 +1,14 @@
 # An Introduction to DataFrames
 
-[Bogumił Kamiński](http://bogumilkaminski.pl/about/), October 4, 2018
+[Bogumił Kamiński](http://bogumilkaminski.pl/about/), July 16, 2019
 
-**The tutorial works with Julia 1.0.1. A major change is moving from JLD to JLD2 package.**
+**The tutorial is for DataFrames 0.19.0.**
 
 A brief introduction to basic usage of [DataFrames](https://github.com/JuliaData/DataFrames.jl).
-Tested under Julia 1.0.1, CSV 0.4.1, CSVFiles 0.9.1, CategoricalArrays 0.4.0, DataFrames 0.14.1,
-DataFramesMeta 0.4.0, FileIO 1.0.1, FreqTables 0.3.0, JLD2 0.1.2, StatPlots 0.8.1.
-Also package `BenchmarkTools 0.4.1` is used as a utility.
+Tested under Julia 1.1, CSV 0.5.9, CSVFiles 0.15.0, CategoricalArrays 0.5.4,
+DataFrames 0.19.0, DataFramesMeta 0.5.0, Feather 0.5.3, FileIO 1.0.7, FreqTables 0.3.1,
+PooledArrays 0.5.2, StatsPlots 0.11.0, Tables 0.2.9.
+Also package BenchmarkTools 0.4.2 is used as a utility.
 
 I will try to keep the material up to date as the packages evolve.
 
@@ -15,7 +16,7 @@ This tutorial covers
 [DataFrames](https://github.com/JuliaData/DataFrames.jl),
 [CSV](https://github.com/JuliaData/CSV.jl),
 [CSVFiles](https://github.com/queryverse/CSVFiles.jl),
-[JLD2](https://github.com/JuliaIO/JLD2.jl),
+[Feather](https://github.com/JuliaData/Feather.jl),
 and [CategoricalArrays](https://github.com/JuliaData/CategoricalArrays.jl),
 as they constitute the core of [DataFrames](https://github.com/JuliaData/DataFrames.jl).
 
@@ -23,7 +24,13 @@ In the last [extras](https://github.com/bkamins/Julia-DataFrames-Tutorial/blob/m
 part mentions *selected* functionalities of *selected* useful packages that I find useful for data manipulation, currently those are:
 [FreqTables](https://github.com/nalimilan/FreqTables.jl),
 [DataFramesMeta](https://github.com/JuliaStats/DataFramesMeta.jl),
-[StatPlots](https://github.com/JuliaPlots/StatPlots.jl).
+[StatsPlots](https://github.com/JuliaPlots/StatsPlots.jl).
+
+# Setting up Jupyter Notebook for work with DataFrames.jl
+
+By default Jupyter Notebook will limit the number of rows and columns when displaying a data frame to roughly fit the screen size (like in the REPL).
+
+You can override this behavior by setting `ENV["COLUMNS"]` or `ENV["LINES"]` variables to hold the maximum width and height of output in characters respectively before using the `notebook` function. Alternatively you can add the following entry `"COLUMNS": "1000", "LINES": "100"` to `"env"` variable in your Jupyter kernel file. See [here](https://jupyter-client.readthedocs.io/en/stable/kernels.html) for information about location and specification of Jupyter kernels.
 
 # TOC
 
@@ -66,26 +73,30 @@ Changelog:
 | 2018-09-10 | Added CSVFiles section to chapter on load/save               |
 | 2018-09-26 | Updated to DataFrames 0.14.0                                 |
 | 2018-10-04 | Updated to DataFrames 0.14.1, added `haskey` and `repeat`    |
+| 2018-12-08 | Updated to DataFrames 0.15.2                                 |
+| 2018-01-03 | Updated to DataFrames 0.16.0, added serialization instructions |
+| 2018-01-18 | Updated to DataFrames 0.17.0, added `passmissing` |
+| 2018-01-27 | Added Feather.jl file read/write |
+| 2018-01-30 | Renamed StatPlots.jl to StatsPlots.jl and added Tables.jl|
+| 2018-02-08 | Added `groupvars` and `groupindices` functions|
+| 2018-04-27 | Updated to DataFrames 0.18.0, dropped JLD2.jl |
+| 2018-04-30 | Updated handling of missing values description |
+| 2018-07-16 | Updated to DataFrames 0.19.0 |
 
 # Core functions summary
 
-1. Constructors: `DataFrame`
-2. Getting summary: `size`, `nrow`, `ncol`, `length`, `describe`, `names`, `eltypes`, `head`, `tail`
-3. Handling missing: `missing` (singleton instance of `Missing`), `ismissing`, `Missings.T`, `skipmissing`, `coalesce`, `allowmissing`, `disallowmissing`, `allowmissing!`, `completecases`, `dropmissing`, `dropmissing!`, disallowmissing, disallowmissing!
-4. Loading and saving: `CSV` (package), `CSVFiles` (package), `JLD2` (package), `CSV.read`, `CSV.write`, `save`, `@save` (from `JLD2`), `load`, `@load` (from `JLD2`)
-5. Working with columns: `rename`, `rename!`, `names!`, `hcat`, `insert!`, `DataFrames.hcat!`, `merge!`, `delete!`, `empty!`, `categorical!`, `DataFrames.index`, `permutedims!`, `haskey`
-6. Working with rows: `sort!`, `sort`, `issorted`, `append!`, `vcat`, `push!`, `view`, `filter`, `filter!`, `deleterows!`, `unique`, `nonunique`, `unique!`, `repeat`
+1. Constructors: `DataFrame`, `DataFrame!`, `Tables.rowtable`, `Tables.columntable`, `Matrix`
+2. Getting summary: `size`, `nrow`, `ncol`, `describe`, `names`, `eltypes`, `first`, `last`, `getindex`, `setindex!`, `@view`
+3. Handling missing: `missing` (singleton instance of `Missing`), `ismissing`, `Missings.T`, `skipmissing`, `replace`, `replace!`, `coalesce`, `allowmissing`, `disallowmissing`, `allowmissing!`, `completecases`, `dropmissing`, `dropmissing!`, `disallowmissing`, `disallowmissing!`, `passmissing`
+4. Loading and saving: `CSV` (package), `CSVFiles` (package), `Serialization` (module), `CSV.read`, `CSV.write`, `save`, `load`, `serialize`, `deserialize`, `Feather.write`, `Feather.read`, `Feather.materialize` (from `Feather`)
+5. Working with columns: `rename`, `rename!`, `names!`, `hcat`, `insertcol!`, `DataFrames.hcat!`, `categorical!`, `DataFrames.index`, `permutedims!`, `hasproperty`, `select`, `select!`
+6. Working with rows: `sort!`, `sort`, `issorted`, `append!`, `vcat`, `push!`, `view`, `filter`, `filter!`, `deleterows!`, `unique`, `nonunique`, `unique!`, `repeat`, `parent`, `parentindices`
 7. Working with categorical: `categorical`, `cut`, `isordered`, `ordered!`, `levels`, `unique`, `levels!`, `droplevels!`, `get`, `recode`, `recode!`
 8. Joining: `join`
 9. Reshaping: `stack`, `melt`, `stackdf`, `meltdf`, `unstack`
-10. Transforming: `groupby`, `vcat`, `by`, `aggregate`, `eachcol`, `eachrow`, `colwise`
+10. Transforming: `groupby`, `vcat`, `by`, `aggregate`, `eachcol`, `eachrow`, `mapcols`, `parent`, `groupvars`, `groupindices`
 11. Extras:
     * [FreqTables](https://github.com/nalimilan/FreqTables.jl): `freqtable`, `prop`
     * [DataFramesMeta](https://github.com/JuliaStats/DataFramesMeta.jl): `@with`, `@where`, `@select`, `@transform`, `@orderby`, `@linq`,
       `by`, `based_on`, `byrow!`
-    * [StatPlots](https://github.com/JuliaPlots/StatPlots.jl): `@df`, `plot`, `density`, `histogram`,`boxplot`, `violin`
-
-# Changes in DataFrames master since last update of the tutorial
-
-* Changes to how `getindex` works
-* explain `view` and `DataFrameRow` better
+    * [StatsPlots](https://github.com/JuliaPlots/StatsPlots.jl): `@df`, `plot`, `density`, `histogram`,`boxplot`, `violin`
