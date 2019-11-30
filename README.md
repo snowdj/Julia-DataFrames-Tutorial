@@ -1,24 +1,52 @@
 # An Introduction to DataFrames
 
-[Bogumił Kamiński](http://bogumilkaminski.pl/about/), July 16, 2019
+[Bogumił Kamiński](http://bogumilkaminski.pl/about/), August 30, 2019
 
-**The tutorial is for DataFrames 0.19.0.**
+**The tutorial is for DataFrames 0.19.3**
 
 A brief introduction to basic usage of [DataFrames](https://github.com/JuliaData/DataFrames.jl).
-Tested under Julia 1.1, CSV 0.5.9, CSVFiles 0.15.0, CategoricalArrays 0.5.4,
-DataFrames 0.19.0, DataFramesMeta 0.5.0, Feather 0.5.3, FileIO 1.0.7, FreqTables 0.3.1,
-PooledArrays 0.5.2, StatsPlots 0.11.0, Tables 0.2.9.
-Also package BenchmarkTools 0.4.2 is used as a utility.
+
+The tutorial contains a specification of the project environment version under which it should be run.
+In order to prepare this environment, before using the tutorial notebooks,
+while in the project folder run the following command in the command line:
+
+```
+julia -e 'using Pkg; Pkg.activate("."); Pkg.instantiate()'
+```
+
+Tested under Julia 1.2. The project dependencies are the following:
+
+```
+  [6e4b80f9] BenchmarkTools v0.4.2
+  [336ed68f] CSV v0.5.11
+  [5d742f6a] CSVFiles v0.15.0
+  [324d7699] CategoricalArrays v0.5.5
+  [944b1d66] CodecZlib v0.6.0
+  [a93c6f00] DataFrames v0.19.3
+  [1313f7d8] DataFramesMeta v0.5.0
+  [becb17da] Feather v0.5.3
+  [5789e2e9] FileIO v1.0.7
+  [da1fdf0e] FreqTables v0.3.1
+  [7073ff75] IJulia v1.19.0
+  [babc3d20] JDF v0.2.4
+  [9da8a3cd] JLSO v1.1.0
+  [b9914132] JSONTables v0.1.2
+  [86f7a689] NamedArrays v0.9.3
+  [2dfb63ee] PooledArrays v0.5.2
+  [f3b207a7] StatsPlots v0.11.0
+  [bd369af6] Tables v0.2.11
+  [a5390f91] ZipFile v0.8.3
+  [9a3f8284] Random
+  [10745b16] Statistics
+  ```
 
 I will try to keep the material up to date as the packages evolve.
 
 This tutorial covers
-[DataFrames](https://github.com/JuliaData/DataFrames.jl),
-[CSV](https://github.com/JuliaData/CSV.jl),
-[CSVFiles](https://github.com/queryverse/CSVFiles.jl),
-[Feather](https://github.com/JuliaData/Feather.jl),
+[DataFrames](https://github.com/JuliaData/DataFrames.jl)
 and [CategoricalArrays](https://github.com/JuliaData/CategoricalArrays.jl),
-as they constitute the core of [DataFrames](https://github.com/JuliaData/DataFrames.jl).
+as they constitute the core of [DataFrames](https://github.com/JuliaData/DataFrames.jl)
+along with selected file reading and writing packages.
 
 In the last [extras](https://github.com/bkamins/Julia-DataFrames-Tutorial/blob/master/13_extras.ipynb)
 part mentions *selected* functionalities of *selected* useful packages that I find useful for data manipulation, currently those are:
@@ -74,22 +102,28 @@ Changelog:
 | 2018-09-26 | Updated to DataFrames 0.14.0                                 |
 | 2018-10-04 | Updated to DataFrames 0.14.1, added `haskey` and `repeat`    |
 | 2018-12-08 | Updated to DataFrames 0.15.2                                 |
-| 2018-01-03 | Updated to DataFrames 0.16.0, added serialization instructions |
-| 2018-01-18 | Updated to DataFrames 0.17.0, added `passmissing` |
-| 2018-01-27 | Added Feather.jl file read/write |
-| 2018-01-30 | Renamed StatPlots.jl to StatsPlots.jl and added Tables.jl|
-| 2018-02-08 | Added `groupvars` and `groupindices` functions|
-| 2018-04-27 | Updated to DataFrames 0.18.0, dropped JLD2.jl |
-| 2018-04-30 | Updated handling of missing values description |
-| 2018-07-16 | Updated to DataFrames 0.19.0 |
+| 2019-01-03 | Updated to DataFrames 0.16.0, added serialization instructions |
+| 2019-01-18 | Updated to DataFrames 0.17.0, added `passmissing` |
+| 2019-01-27 | Added Feather.jl file read/write |
+| 2019-01-30 | Renamed StatPlots.jl to StatsPlots.jl and added Tables.jl|
+| 2019-02-08 | Added `groupvars` and `groupindices` functions|
+| 2019-04-27 | Updated to DataFrames 0.18.0, dropped JLD2.jl |
+| 2019-04-30 | Updated handling of missing values description |
+| 2019-07-16 | Updated to DataFrames 0.19.0 |
+| 2019-08-14 | Added JSONTables.jl and `Tables.columnindex` |
+| 2019-08-16 | Added Project.toml and Manifest.toml |
+| 2019-08-26 | Update to Julia 1.2 and DataFrames 0.19.3 |
+| 2019-08-29 | Add example how to compress/decompress CSV file using CodecZlib |
+| 2019-08-30 | Add examples of JLSO.jl and ZipFile.jl by [xiaodaigh](https://github.com/xiaodaigh) |
+| 2019-11-03 | Add examples of JDF.jl by [xiaodaigh](https://github.com/xiaodaigh) |
 
 # Core functions summary
 
 1. Constructors: `DataFrame`, `DataFrame!`, `Tables.rowtable`, `Tables.columntable`, `Matrix`
 2. Getting summary: `size`, `nrow`, `ncol`, `describe`, `names`, `eltypes`, `first`, `last`, `getindex`, `setindex!`, `@view`
 3. Handling missing: `missing` (singleton instance of `Missing`), `ismissing`, `Missings.T`, `skipmissing`, `replace`, `replace!`, `coalesce`, `allowmissing`, `disallowmissing`, `allowmissing!`, `completecases`, `dropmissing`, `dropmissing!`, `disallowmissing`, `disallowmissing!`, `passmissing`
-4. Loading and saving: `CSV` (package), `CSVFiles` (package), `Serialization` (module), `CSV.read`, `CSV.write`, `save`, `load`, `serialize`, `deserialize`, `Feather.write`, `Feather.read`, `Feather.materialize` (from `Feather`)
-5. Working with columns: `rename`, `rename!`, `names!`, `hcat`, `insertcol!`, `DataFrames.hcat!`, `categorical!`, `DataFrames.index`, `permutedims!`, `hasproperty`, `select`, `select!`
+4. Loading and saving: `CSV` (package), `CSVFiles` (package), `Serialization` (module), `CSV.read`, `CSV.write`, `save`, `load`, `serialize`, `deserialize`, `Feather.write`, `Feather.read`, `Feather.materialize` (from `Feather` package), `JSONTables` (package), `arraytable`, `objecttable`, `jsontable`, `CodecZlib` (module), `GzipCompressorStream`, `GzipDecompressorStream`, `JDF.jl` (package), `JDF.savejdf`, `JDF.loadjdf`, `JLSO.jl` (package), `JLSO.save`, `JLSO.load`, `ZipFile.jl` (package), `ZipFile.reader`, `ZipFile.writer`, `ZipFile.addfile`
+5. Working with columns: `rename`, `rename!`, `names!`, `hcat`, `insertcol!`, `DataFrames.hcat!`, `categorical!`, `DataFrames.index`, `permutedims!`, `hasproperty`, `select`, `select!`, `columnindex`, `Not`, `All`, `Between`
 6. Working with rows: `sort!`, `sort`, `issorted`, `append!`, `vcat`, `push!`, `view`, `filter`, `filter!`, `deleterows!`, `unique`, `nonunique`, `unique!`, `repeat`, `parent`, `parentindices`
 7. Working with categorical: `categorical`, `cut`, `isordered`, `ordered!`, `levels`, `unique`, `levels!`, `droplevels!`, `get`, `recode`, `recode!`
 8. Joining: `join`
